@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: ${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5433/jobhun}
-    username: ${JDBC_DATABASE_USERNAME:core}
-    password: ${JDBC_DATABASE_PASSWORD:arie12345}
+    url: jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5433}/${PGDATABASE:jobhun}
+    username: ${PGUSER:core}
+    password: ${PGPASSWORD:arie12345}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: ${DB_POOL_SIZE:10}
