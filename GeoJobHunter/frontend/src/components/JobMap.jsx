@@ -44,7 +44,9 @@ function MapUpdater({ lat, lon, radius }) {
                     : radius <= 25 ? 11
                     : radius <= 50 ? 10
                     : radius <= 100 ? 9
+                    : radius <= 200 ? 8
                     : radius <= 500 ? 7
+                    : radius <= 1000 ? 6
                     : 5;
     map.setView([lat, lon], zoomLevel, { animate: true });
   }, [lat, lon, radius, map]);
