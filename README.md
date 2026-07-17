@@ -4,14 +4,14 @@
 
 ### Aplikasi Web Pencari Lowongan Kerja Berbasis Peta Interaktif
 
-**Temukan lowongan magang & kerja dari 3.148+ perusahaan di 453 kota seluruh Indonesia!**
+**Temukan lowongan magang & kerja dari 3.421+ perusahaan di 455 kota seluruh Indonesia!**
 
 [![Frontend](https://img.shields.io/badge/Frontend-Vercel-000?logo=vercel)](https://geo-job-hunter-maganghub-day1.vercel.app)
 [![Backend](https://img.shields.io/badge/Backend-Railway-0B0D0E?logo=railway)](https://geojobhuntermaganghubday1-production.up.railway.app)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.5-6DB33F?logo=springboot)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Railway-4169E1?logo=postgresql)](https://railway.app)
-[![Dataset](https://img.shields.io/badge/Data-22.331%20lowongan-22c55e)](https://maganghub.kemnaker.go.id)
+[![Dataset](https://img.shields.io/badge/Data-22.331%20lowongan%20%7C%203.421%20perusahaan-22c55e)](https://maganghub.kemnaker.go.id)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 ---
@@ -30,7 +30,7 @@
 
 ## 📊 Dataset
 
-**22.331 lowongan magang** dari **3.148 perusahaan** di **453 kota/kabupaten** seluruh Indonesia — bersumber dari [MagangHub Kemnaker RI](https://maganghub.kemnaker.go.id).
+**22.331 lowongan magang** dari **3.421 perusahaan** di **455 kota/kabupaten** seluruh Indonesia — bersumber dari [MagangHub Kemnaker RI](https://maganghub.kemnaker.go.id).
 
 | Wilayah | Contoh Kota |
 |---------|-------------|
@@ -109,7 +109,7 @@ sequenceDiagram
 | **Backend** | Java 21, Spring Boot 3.2.5, Spring Data JPA, Hibernate |
 | **Database** | PostgreSQL 16 (Railway) |
 | **Deployment** | Railway (backend), Vercel (frontend) |
-| **Dataset** | 25.040 baris CSV dari MagangHub Kemnaker RI |
+| **Dataset** | 22.331 lowongan dari 3.421 perusahaan (CSV) — MagangHub Kemnaker RI |
 
 ---
 
@@ -143,13 +143,15 @@ spring:
     password: ${DB_PASSWORD:postgres}
 ```
 
-**Frontend** (`.env`):
+**Frontend** (`.env`) — development:
 ```env
 VITE_API_BASE_URL=http://localhost:8080
 VITE_MAP_DEFAULT_LAT=-6.2000
 VITE_MAP_DEFAULT_LON=106.8166
 VITE_MAP_DEFAULT_ZOOM=12
 ```
+
+> **Production**: Frontend di Vercel menggunakan **rewrite proxy** di `vercel.json` — browser panggil `/api/*` di domain yang sama, Vercel teruskan ke Railway. **Jangan set `VITE_API_BASE_URL`** di Vercel env variables.
 
 ---
 
@@ -184,7 +186,7 @@ GeoJobHunter/
 │   │   │   └── JobTable.jsx         # Job list table
 │   │   ├── hooks/useJobMap.js      # State management
 │   │   └── services/api.js         # Axios client
-│   ├── vercel.json                  # Vercel proxy config
+│   ├── vercel.json                  # Vercel rewrite proxy (API → Railway)
 │   └── .env.example
 └── scraper/                         # Python data tools
     ├── requirements.txt
