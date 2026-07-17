@@ -1,8 +1,9 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { fetchJobsMap } from '../services/api';
 
 const DEFAULT_LAT = parseFloat(import.meta.env.VITE_MAP_DEFAULT_LAT || '-6.2000');
 const DEFAULT_LON = parseFloat(import.meta.env.VITE_MAP_DEFAULT_LON || '106.8166');
+const DEBOUNCE_MS = 400;
 
 export function useJobMap() {
   const [data, setData] = useState(null);
@@ -16,6 +17,7 @@ export function useJobMap() {
     sortBy: 'asc',
   });
   const abortRef = useRef(null);
+  const debounceRef = useRef(null);
 
   const search = useCallback(async (overrides = {}) => {
     // Cancel previous request
@@ -45,6 +47,22 @@ export function useJobMap() {
       setLoading(false);
     }
   }, [filters]);
+
+  // ── Real-time search on radius change (debounced) ──────────────
+  useEffect(() => {
+    // Skip initial render (radius still at default 10)
+    if (filters.radius === 10 && !data) return;
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      search();
+    }, DEBOUNCE_MS);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.radius]);
 
   const getUserLocation = useCallback(() => {
     if (!navigator.geolocation) {
