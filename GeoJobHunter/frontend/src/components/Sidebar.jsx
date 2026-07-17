@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const PRODI_OPTIONS = [
   { value: '', label: 'Semua Jurusan' },
@@ -37,6 +37,12 @@ const PRODI_OPTIONS = [
 export default function Sidebar({ filters, setFilters, onSearch, onGetLocation }) {
   const [latInput, setLatInput] = useState(filters.latUser);
   const [lonInput, setLonInput] = useState(filters.lonUser);
+
+  // Sync input fields when GPS updates filters from parent
+  useEffect(() => {
+    setLatInput(filters.latUser);
+    setLonInput(filters.lonUser);
+  }, [filters.latUser, filters.lonUser]);
 
   const handleApply = () => {
     onSearch({
