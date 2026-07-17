@@ -4,8 +4,16 @@ import com.geojob.entity.Company;
 import com.geojob.entity.Job;
 import com.geojob.repository.CompanyRepository;
 import com.geojob.repository.JobRepository;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.io.InputStreamReader;
+import java.util.*;
+import java.util.zip.GZIPInputStream;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
@@ -19,143 +27,134 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     @Override
+    @Transactional
     public void run(String... args) {
-        // ── Only seed if database is empty ──────────────────────────
-        if (companyRepo.count() > 0) {
-            System.out.println("[Seeder] ⏭ Database already has data, skipping seed.");
+        // ── Jika data lama (Jakarta-only, < 50 company), hapus & seed ulang ──
+        long existingCount = companyRepo.count();
+        if (existingCount > 0 && existingCount < 50) {
+            System.out.println("[Seeder] 🗑️ Data lama terdeteksi (" + existingCount + " company), menghapus untuk seed ulang...");
+            jobRepo.deleteAll();
+            companyRepo.deleteAll();
+        } else if (existingCount >= 50) {
+            System.out.println("[Seeder] ⏭ Database sudah memiliki " + existingCount + " company, skip seed.");
             return;
         }
 
-        System.out.println("[Seeder] 🌱 Seeding data...");
+        System.out.println("[Seeder] 🌱 Memulai seeding dari CSV...");
 
-        // ── Companies in Jakarta ────────────────────────────────────
-        seed("PT Teknologi Nusantara",
-             "Jl. MH Thamrin No.1, Menteng, Jakarta Pusat",
-             "Jakarta Pusat", -6.1917, 106.8401,
-             "Backend Developer", "Teknik Informatika, Ilmu Komputer", 3,
-             "https://example.com/apply/backend-dev",
-             "Frontend Developer", "Teknik Informatika, Sistem Informasi", 2,
-             "https://example.com/apply/frontend-dev",
-             "UI/UX Designer", "Desain Komunikasi Visual, Teknik Informatika", 2,
-             "https://example.com/apply/ui-ux");
+        try (var gzip = new GZIPInputStream(new ClassPathResource("lowongan.csv.gz").getInputStream());
+             var reader = new InputStreamReader(gzip);
+             var csv = new CSVReader(reader)) {
 
-        seed("PT Bank Digital Indonesia",
-             "Jl. Sudirman Kav. 45, Senayan, Jakarta Selatan",
-             "Jakarta Selatan", -6.2274, 106.8035,
-             "Full Stack Developer", "Teknik Informatika, Ilmu Komputer", 5,
-             "https://example.com/apply/fs-dev",
-             "Data Analyst", "Statistika, Matematika, Teknik Informatika", 3,
-             "https://example.com/apply/data-analyst",
-             "Mobile Developer", "Teknik Informatika, Ilmu Komputer", 2,
-             "https://example.com/apply/mobile-dev");
+            // Skip header
+            csv.readNext();
 
-        seed("PT Ecommerce Maju Bersama",
-             "Jl. Gatot Subroto No.28, Kuningan, Jakarta Selatan",
-             "Jakarta Selatan", -6.2382, 106.8309,
-             "DevOps Engineer", "Teknik Informatika, Ilmu Komputer", 2,
-             "https://example.com/apply/devops",
-             "Product Manager", "Teknik Industri, Manajemen, Sistem Informasi", 1,
-             "https://example.com/apply/pm",
-             "QA Engineer", "Teknik Informatika, Sistem Informasi", 3,
-             "https://example.com/apply/qa");
+            // ── Group by company key: nama + lat + lon ──────────────
+            Map<String, List<String[]>> companyMap = new LinkedHashMap<>();
+            String[] row;
+            int totalRows = 0;
 
-        seed("PT Startup Edukasi Kreatif",
-             "Jl. Kemang Raya No.12, Mampang, Jakarta Selatan",
-             "Jakarta Selatan", -6.2580, 106.8190,
-             "React Native Developer", "Teknik Informatika, Ilmu Komputer", 2,
-             "https://example.com/apply/rn-dev",
-             "Content Writer", "Sastra, Ilmu Komunikasi, Pendidikan", 2,
-             "https://example.com/apply/content-writer",
-             "Graphic Designer", "Desain Komunikasi Visual, Seni Rupa", 1,
-             "https://example.com/apply/gd");
+            while ((row = csv.readNext()) != null) {
+                if (row.length < 12) continue;
+                String namaPerusahaan = row[1].trim();
+                String latStr = row[9].trim();
+                String lonStr = row[10].trim();
+                if (namaPerusahaan.isEmpty() || latStr.isEmpty() || lonStr.isEmpty()) continue;
 
-        seed("PT Logistik Pintar Indonesia",
-             "Jl. Yos Sudarso No.15, Kelapa Gading, Jakarta Utara",
-             "Jakarta Utara", -6.1580, 106.9060,
-             "Data Engineer", "Teknik Informatika, Ilmu Komputer, Matematika", 3,
-             "https://example.com/apply/de",
-             "Backend Developer (Go)", "Teknik Informatika, Ilmu Komputer", 2,
-             "https://example.com/apply/go-dev",
-             "System Analyst", "Sistem Informasi, Teknik Informatika", 2,
-             "https://example.com/apply/sa");
+                String key = namaPerusahaan + "|" + latStr + "|" + lonStr;
+                companyMap.computeIfAbsent(key, k -> new ArrayList<>()).add(row);
+                totalRows++;
+            }
 
-        seed("PT Fintech Syariah Nusantara",
-             "Jl. TB Simatupang No.5, Cilandak, Jakarta Selatan",
-             "Jakarta Selatan", -6.2880, 106.7965,
-             "Java Developer", "Teknik Informatika, Ilmu Komputer", 3,
-             "https://example.com/apply/java-dev",
-             "Cyber Security Analyst", "Teknik Informatika, Ilmu Komputer", 2,
-             "https://example.com/apply/csa",
-             "Database Administrator", "Teknik Informatika, Sistem Informasi", 1,
-             "https://example.com/apply/dba");
+            System.out.println("[Seeder] 📊 Total baris CSV: " + totalRows);
+            System.out.println("[Seeder] 🏢 Total perusahaan unik: " + companyMap.size());
 
-        seed("PT Media Digital Terdepan",
-             "Jl. Asia Afrika No.8, Gelora Bung Karno, Jakarta Pusat",
-             "Jakarta Pusat", -6.2182, 106.8015,
-             "Digital Marketing", "Ilmu Komunikasi, Manajemen, Ekonomi", 3,
-             "https://example.com/apply/dm",
-             "SEO Specialist", "Ilmu Komputer, Teknik Informatika", 2,
-             "https://example.com/apply/seo",
-             "Social Media Specialist", "Ilmu Komunikasi, Desain Komunikasi Visual", 2,
-             "https://example.com/apply/sms");
+            // ── Seed each company with its jobs ─────────────────────
+            int companyCount = 0;
+            int jobCount = 0;
 
-        seed("PT Kesehatan Digital Indonesia",
-             "Jl. Rasuna Said Kav. 18, Kuningan, Jakarta Selatan",
-             "Jakarta Selatan", -6.2310, 106.8380,
-             "AI Engineer", "Teknik Informatika, Ilmu Komputer, Matematika", 2,
-             "https://example.com/apply/ai",
-             "iOS Developer", "Teknik Informatika, Ilmu Komputer", 1,
-             "https://example.com/apply/ios",
-             "Technical Writer", "Sastra, Ilmu Komputer, Teknik Informatika", 1,
-             "https://example.com/apply/tw");
+            for (Map.Entry<String, List<String[]>> entry : companyMap.entrySet()) {
+                List<String[]> rows = entry.getValue();
+                String[] firstRow = rows.get(0);
 
-        seed("PT Properti Modern Tbk",
-             "Jl. Thamrin Boulevard No.55, Kelapa Gading, Jakarta Utara",
-             "Jakarta Utara", -6.1510, 106.8990,
-             "React Developer", "Teknik Informatika, Ilmu Komputer", 3,
-             "https://example.com/apply/react-dev",
-             "Node.js Developer", "Teknik Informatika, Ilmu Komputer", 2,
-             "https://example.com/apply/node-dev",
-             "IT Support Engineer", "Teknik Informatika, Sistem Informasi", 3,
-             "https://example.com/apply/it-support");
+                String namaPerusahaan = firstRow[1].trim();
+                String lokasi = firstRow[2].trim();
+                String alamat = firstRow[3].trim();
+                double lat = Double.parseDouble(firstRow[9].trim());
+                double lon = Double.parseDouble(firstRow[10].trim());
 
-        seed("PT Konsultan Bisnis Global",
-             "Jl. Sudirman Central Business District (SCBD) No.1",
-             "Jakarta Selatan", -6.2250, 106.8070,
-             "SAP Consultant", "Akuntansi, Sistem Informasi, Teknik Industri", 2,
-             "https://example.com/apply/sap",
-             "Business Analyst", "Sistem Informasi, Manajemen, Teknik Industri", 3,
-             "https://example.com/apply/ba",
-             "Project Manager IT", "Teknik Informatika, Manajemen, Sistem Informasi", 1,
-             "https://example.com/apply/pm-it");
+                Company company = new Company(namaPerusahaan, alamat, lokasi, lat, lon);
 
-        System.out.println("[Seeder] ✅ Data seeding completed!");
+                for (String[] r : rows) {
+                    String judulLowongan = r[0].trim();
+                    String kuotaStr = r[4].trim();
+                    String persyaratan = r.length > 8 ? r[8].trim() : "";
+                    String link = r.length > 11 ? r[11].trim() : "";
+
+                    // Parse kuota (default 1 if invalid)
+                    int kuota = 1;
+                    try { kuota = Integer.parseInt(kuotaStr); } catch (NumberFormatException ignored) {}
+
+                    // Extract program studi dari persyaratan
+                    String prodiSyarat = extractProdi(persyaratan);
+
+                    Job job = new Job(judulLowongan, prodiSyarat, kuota, link);
+                    job.setCompany(company);
+                    company.getJobs().add(job);
+                    jobCount++;
+                }
+
+                companyRepo.save(company);
+                companyCount++;
+
+                if (companyCount % 50 == 0) {
+                    System.out.println("[Seeder] ✅ " + companyCount + " perusahaan ter-seed (" + jobCount + " lowongan)");
+                }
+            }
+
+            System.out.println("[Seeder] ✅ Selesai! " + companyCount + " perusahaan, " + jobCount + " lowongan");
+
+        } catch (Exception e) {
+            System.err.println("[Seeder] ❌ Gagal seeding: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
-     * Seed one company with up to 3 job positions.
+     * Extract program studi dari field persyaratan.
+     * Format: "Tingkat pendidikan: ... Program studi: Manajemen, Administrasi, ..."
      */
-    private void seed(String companyName, String alamat, String lokasi,
-                      Double lat, Double lon,
-                      String job1, String prodi1, Integer kuota1, String link1,
-                      String job2, String prodi2, Integer kuota2, String link2,
-                      String job3, String prodi3, Integer kuota3, String link3) {
+    private String extractProdi(String persyaratan) {
+        if (persyaratan == null || persyaratan.isBlank()) return "Umum";
 
-        Company company = new Company(companyName, alamat, lokasi, lat, lon);
+        // Cari "Program studi:" atau "Program Studi:"
+        int idx = persyaratan.toLowerCase().indexOf("program studi");
+        if (idx == -1) {
+            // Fallback: cari "Prodi:" 
+            idx = persyaratan.toLowerCase().indexOf("prodi:");
+            if (idx == -1) return "Umum";
+        }
 
-        Job j1 = new Job(job1, prodi1, kuota1, link1);
-        Job j2 = new Job(job2, prodi2, kuota2, link2);
-        Job j3 = new Job(job3, prodi3, kuota3, link3);
+        // Cari titik dua setelah "Program studi"
+        int colonIdx = persyaratan.indexOf(':', idx);
+        if (colonIdx == -1) return "Umum";
 
-        j1.setCompany(company);
-        j2.setCompany(company);
-        j3.setCompany(company);
+        // Ambil teks setelah titik dua
+        String after = persyaratan.substring(colonIdx + 1).trim();
 
-        company.getJobs().add(j1);
-        company.getJobs().add(j2);
-        company.getJobs().add(j3);
+        // Ambil sampai titik, baris baru, atau akhir string
+        int endIdx = after.length();
+        int dotIdx = after.indexOf('.');
+        int newlineIdx = after.indexOf('\n');
+        if (dotIdx > 0) endIdx = Math.min(endIdx, dotIdx);
+        if (newlineIdx > 0) endIdx = Math.min(endIdx, newlineIdx);
 
-        companyRepo.save(company);
-        System.out.println("[Seeder] ✅ " + companyName + " (" + lokasi + ") — 3 lowongan");
+        String prodi = after.substring(0, endIdx).trim();
+
+        // Bersihkan dari karakter noise
+        prodi = prodi.replaceAll("[\\r\\n]+", ", ").trim();
+        if (prodi.isEmpty() || prodi.equals(".")) return "Umum";
+
+        return prodi;
     }
 }
