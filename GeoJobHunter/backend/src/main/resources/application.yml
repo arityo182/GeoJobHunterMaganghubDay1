@@ -2,14 +2,10 @@ server:
   port: ${PORT:8080}
 
 spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
   datasource:
-    url: ${JDBC_DATABASE_URL:jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5433}/${PGDATABASE:jobhun}}
-    username: ${JDBC_DATABASE_USERNAME:${PGUSER:core}}
-    password: ${JDBC_DATABASE_PASSWORD:${PGPASSWORD:arie12345}}
     driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: ${DB_POOL_SIZE:10}
-      connection-timeout: 30000
   jpa:
     hibernate:
       ddl-auto: update
