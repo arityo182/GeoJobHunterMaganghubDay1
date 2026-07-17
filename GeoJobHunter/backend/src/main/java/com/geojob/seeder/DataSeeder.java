@@ -29,15 +29,12 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        // ── Jika data lama (Jakarta-only, < 50 company), hapus & seed ulang ──
+        // ── Hapus semua data lama, seed ulang dengan data terbaru ──
         long existingCount = companyRepo.count();
-        if (existingCount > 0 && existingCount < 50) {
-            System.out.println("[Seeder] 🗑️ Data lama terdeteksi (" + existingCount + " company), menghapus untuk seed ulang...");
+        if (existingCount > 0) {
+            System.out.println("[Seeder] 🗑️ Menghapus " + existingCount + " company lama untuk seed ulang...");
             jobRepo.deleteAll();
             companyRepo.deleteAll();
-        } else if (existingCount >= 50) {
-            System.out.println("[Seeder] ⏭ Database sudah memiliki " + existingCount + " company, skip seed.");
-            return;
         }
 
         System.out.println("[Seeder] 🌱 Memulai seeding dari CSV...");
