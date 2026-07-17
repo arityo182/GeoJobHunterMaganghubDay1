@@ -2,9 +2,9 @@
 
 # 🗺️ GeoJob Hunter
 
-### Aplikasi Web Pencari Lowongan Kerja Berbasis Peta Interaktif
+### Aplikasi Web Pencari Lowongan Magang Berbasis Peta Interaktif
 
-**Temukan lowongan magang & kerja dari 3.421+ perusahaan di 455 kota seluruh Indonesia!** *(per 16 Juli 2026)*
+**Temukan lowongan magang dari 3.421+ perusahaan di 455 kota seluruh Indonesia!** *(per 16 Juli 2026)*
 
 [![Frontend](https://img.shields.io/badge/Frontend-Vercel-000?logo=vercel)](https://geo-job-hunter-maganghub-day1.vercel.app)
 [![Backend](https://img.shields.io/badge/Backend-Railway-0B0D0E?logo=railway)](https://geojobhuntermaganghubday1-production.up.railway.app)
