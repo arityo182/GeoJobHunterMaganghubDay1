@@ -118,13 +118,14 @@ export default function App() {
             flyToCoords={flyToCoords}
           />
 
-          {/* Tombol toggle tabel — mobile */}
+          {/* Tombol toggle tabel — mobile (fixed biar gak ketutupan sheet) */}
           <button
             onClick={() => setShowTable(!showTable)}
-            className="lg:hidden absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000]
+            className={`lg:hidden fixed z-[1001] left-1/2 -translate-x-1/2 transition-all duration-300
                        bg-white border border-gray-200 rounded-full shadow-lg
                        px-4 py-2 text-sm font-medium text-gray-700
-                       hover:bg-gray-50 transition"
+                       hover:bg-gray-50
+                       ${showTable ? 'bottom-20' : 'bottom-4'}`}
           >
             📋 {showTable ? 'Tutup' : `Lihat Lowongan (${totalLowongan})`}
           </button>
