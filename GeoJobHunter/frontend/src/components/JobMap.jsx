@@ -35,12 +35,19 @@ const COLOR_MAP = {
   red: '#ef4444',
 };
 
-// ─── MapUpdater: geser peta saat userLat/userLon berubah ───
-function MapUpdater({ lat, lon }) {
+// ─── MapUpdater: geser peta & zoom otomatis mengikuti radius ───
+function MapUpdater({ lat, lon, radius }) {
   const map = useMap();
   useEffect(() => {
-    map.setView([lat, lon], map.getZoom());
-  }, [lat, lon, map]);
+    // Zoom level berdasarkan radius: makin besar radius, makin zoom out
+    const zoomLevel = radius <= 10 ? 12
+                    : radius <= 25 ? 11
+                    : radius <= 50 ? 10
+                    : radius <= 100 ? 9
+                    : radius <= 500 ? 7
+                    : 5;
+    map.setView([lat, lon], zoomLevel, { animate: true });
+  }, [lat, lon, radius, map]);
   return null;
 }
 
@@ -87,7 +94,7 @@ export default function JobMap({ userLat, userLon, radius, companies, onMapClick
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      <MapUpdater lat={userLat} lon={userLon} />
+      <MapUpdater lat={userLat} lon={userLon} radius={radius} />
       <MapFlyTo coords={flyToCoords} />
       <MapClickHandler onMapClick={onMapClick} />
 

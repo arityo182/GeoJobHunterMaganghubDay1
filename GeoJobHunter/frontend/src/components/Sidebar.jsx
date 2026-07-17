@@ -89,16 +89,16 @@ export default function Sidebar({ filters, setFilters, onSearch, onGetLocation }
         <input
           type="range"
           min="1"
-          max="4000"
-          step="10"
-          value={Math.min(filters.radius, 4000)}
+          max="200"
+          step="1"
+          value={Math.min(filters.radius, 200)}
           onChange={(e) => setFilters({ ...filters, radius: parseInt(e.target.value) })}
           className="w-full"
         />
         <div className="flex justify-between text-xs text-gray-400">
-          <span>5 km</span>
-          <span>100 km</span>
-          <span>4000 km</span>
+          <span>1 km</span>
+          <span>50 km</span>
+          <span>200 km</span>
         </div>
       </div>
 
