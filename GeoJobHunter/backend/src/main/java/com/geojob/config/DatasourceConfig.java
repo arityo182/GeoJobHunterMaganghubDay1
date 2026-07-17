@@ -17,6 +17,29 @@ public class DatasourceConfig {
     @Primary
     public DataSource dataSource() {
         // ─────────────────────────────────────────────────────────────────
+        // DIAGNOSTIC: log all relevant env vars available at startup
+        // ─────────────────────────────────────────────────────────────────
+        System.out.println("[GeoJob] 🔍 DIAGNOSTIC: Checking database-related env vars...");
+        String[] relevantVars = {
+            "DATABASE_URL", "DATABASE_PUBLIC_URL", "JDBC_DATABASE_URL",
+            "PGHOST", "PGPORT", "PGDATABASE", "PGUSER", "PGPASSWORD",
+            "SPRING_DATASOURCE_URL", "SPRING_DATASOURCE_USERNAME", "SPRING_DATASOURCE_PASSWORD",
+            "RAILWAY_SERVICE_ID", "RAILWAY_ENVIRONMENT", "RAILWAY_PROJECT_ID",
+            "RAILWAY_TCP_PROXY_DOMAIN", "RAILWAY_PRIVATE_DOMAIN",
+            "POSTGRES_URL", "POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB"
+        };
+        for (String var : relevantVars) {
+            String val = System.getenv(var);
+            if (val != null && !val.isBlank()) {
+                // Mask password values for safe logging
+                String display = var.contains("PASSWORD") || var.contains("SECRET")
+                    ? val.substring(0, Math.min(4, val.length())) + "****"
+                    : val;
+                System.out.println("[GeoJob]   ✅ " + var + " = " + display);
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
         // Railway auto-injects DATABASE_PUBLIC_URL / DATABASE_URL / etc.
         // in postgresql:// format. We convert to jdbc:postgresql:// here.
         // Priority: DATABASE_PUBLIC_URL > DATABASE_URL > JDBC_DATABASE_URL
@@ -108,7 +131,11 @@ public class DatasourceConfig {
         String user = getEnv("PGUSER", "core");
         String pass = getEnv("PGPASSWORD", "arie12345");
 
-        System.out.println("[GeoJob] 📦 DataSource from PGHOST/PGPORT/PGDATABASE vars");
+        System.out.println("[GeoJob] ❌ No DATABASE_URL/PUBLIC_URL/JDBC_URL found — using PGHOST/PGPORT/PGDATABASE fallback");
+        System.out.println("[GeoJob]   PGHOST     = " + host);
+        System.out.println("[GeoJob]   PGPORT     = " + port);
+        System.out.println("[GeoJob]   PGDATABASE = " + db);
+        System.out.println("[GeoJob]   PGUSER     = " + user);
         System.out.println("[GeoJob] 🔗 JDBC URL: jdbc:postgresql://" + host + ":" + port + "/" + db);
 
         DataSource ds = DataSourceBuilder.create()

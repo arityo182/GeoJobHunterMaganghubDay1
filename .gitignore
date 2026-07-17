@@ -36,3 +36,5 @@ Thumbs.db
 # Env
 .env
 .env.local
+city_coords_cache*.json
+*.csv
