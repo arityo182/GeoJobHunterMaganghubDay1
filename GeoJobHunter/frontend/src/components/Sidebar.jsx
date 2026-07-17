@@ -34,7 +34,7 @@ const PRODI_OPTIONS = [
   { value: 'Jurnalistik', label: 'Jurnalistik' },
 ];
 
-export default function Sidebar({ filters, setFilters, onSearch, onGetLocation }) {
+export default function Sidebar({ filters, setFilters, onSearch, onGetLocation, onClose }) {
   const [latInput, setLatInput] = useState(filters.latUser);
   const [lonInput, setLonInput] = useState(filters.lonUser);
 
@@ -52,9 +52,23 @@ export default function Sidebar({ filters, setFilters, onSearch, onGetLocation }
   };
 
   return (
-    <aside className="w-80 bg-white border-r border-gray-200 p-5 overflow-y-auto flex flex-col gap-5">
-      <h1 className="text-xl font-bold text-blue-700">🗺️ GeoJob Hunter</h1>
-      <p className="text-xs text-gray-500 -mt-3">Cari lowongan kerja di sekitarmu</p>
+    <aside className="w-80 bg-white border-r border-gray-200 p-5 overflow-y-auto flex flex-col gap-5 shadow-xl lg:shadow-none">
+      {/* Header + Close button */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold text-blue-700">🗺️ GeoJob Hunter</h1>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="lg:hidden p-1 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+            aria-label="Tutup sidebar"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
+      <p className="text-xs text-gray-500 -mt-3">Cari lowongan magang di sekitarmu</p>
 
       {/* Lokasi User */}
       <div>
