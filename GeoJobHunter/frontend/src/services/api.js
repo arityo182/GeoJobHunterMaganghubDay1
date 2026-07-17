@@ -19,7 +19,7 @@ const api = axios.create({
  */
 export const fetchJobsMap = async (params) => {
   try {
-    const response = await api.get('/api/jobs/map', { params });
+    const response = await api.get('/jobs/map', { params });
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -35,7 +35,7 @@ export const fetchJobsMap = async (params) => {
  */
 export const fetchLocations = async () => {
   try {
-    const response = await api.get('/api/jobs/locations');
+    const response = await api.get('/jobs/locations');
     return response.data;
   } catch {
     return [];
