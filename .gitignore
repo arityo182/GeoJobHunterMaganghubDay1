@@ -1,0 +1,38 @@
+# CSV data files (large)
+*.csv
+
+# Backend - Maven build
+backend/target/
+GeoJobHunter/backend/target/
+*.jar
+*.log
+*.iml
+.idea/
+
+# Frontend - dependencies & build
+node_modules/
+GeoJobHunter/frontend/node_modules/
+GeoJobHunter/frontend/dist/
+GeoJobHunter/frontend/.env
+
+# Scraper
+GeoJobHunter/scraper/__pycache__/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+scraper/*.pyc
+scraper/__pycache__/
+
+# Logs
+*.log
+/tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
